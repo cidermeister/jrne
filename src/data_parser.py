@@ -26,34 +26,42 @@ def parse_timeline_data(json_data):
             end_lat = None
             end_lng = None
 
-            # Find previous visit for origin
-            if i > 0 and 'visit' in segments[i-1]:
-                prev_visit = segments[i-1]['visit']
-                top_candidate = prev_visit.get('topCandidate', {})
-                start_place_id = top_candidate.get('placeId')
-                if 'placeLocation' in top_candidate and 'latLng' in top_candidate['placeLocation']:
-                    latlng_str = top_candidate['placeLocation']['latLng']
-                    try:
-                        # Format is typically "lat°, lng°"
-                        lat_str, lng_str = latlng_str.replace('°', '').split(',')
-                        start_lat = float(lat_str.strip())
-                        start_lng = float(lng_str.strip())
-                    except Exception:
-                        pass
+            # Find previous visit for origin by scanning backwards
+            for j in range(i-1, -1, -1):
+                if 'visit' in segments[j]:
+                    prev_visit = segments[j]['visit']
+                    top_candidate = prev_visit.get('topCandidate', {})
+                    start_place_id = top_candidate.get('placeId')
+                    if 'placeLocation' in top_candidate and 'latLng' in top_candidate['placeLocation']:
+                        latlng_str = top_candidate['placeLocation']['latLng']
+                        try:
+                            lat_str, lng_str = latlng_str.replace('°', '').split(',')
+                            start_lat = float(lat_str.strip())
+                            start_lng = float(lng_str.strip())
+                        except Exception:
+                            pass
+                    break
+                elif 'activity' in segments[j]:
+                    # Stop if we hit another activity before a visit
+                    break
 
-            # Find next visit for destination
-            if i + 1 < len(segments) and 'visit' in segments[i+1]:
-                next_visit = segments[i+1]['visit']
-                top_candidate = next_visit.get('topCandidate', {})
-                end_place_id = top_candidate.get('placeId')
-                if 'placeLocation' in top_candidate and 'latLng' in top_candidate['placeLocation']:
-                    latlng_str = top_candidate['placeLocation']['latLng']
-                    try:
-                        lat_str, lng_str = latlng_str.replace('°', '').split(',')
-                        end_lat = float(lat_str.strip())
-                        end_lng = float(lng_str.strip())
-                    except Exception:
-                        pass
+            # Find next visit for destination by scanning forwards
+            for j in range(i+1, len(segments)):
+                if 'visit' in segments[j]:
+                    next_visit = segments[j]['visit']
+                    top_candidate = next_visit.get('topCandidate', {})
+                    end_place_id = top_candidate.get('placeId')
+                    if 'placeLocation' in top_candidate and 'latLng' in top_candidate['placeLocation']:
+                        latlng_str = top_candidate['placeLocation']['latLng']
+                        try:
+                            lat_str, lng_str = latlng_str.replace('°', '').split(',')
+                            end_lat = float(lat_str.strip())
+                            end_lng = float(lng_str.strip())
+                        except Exception:
+                            pass
+                    break
+                elif 'activity' in segments[j]:
+                    break
 
             # Extract activity specifics
             activity_type = activity.get('topCandidate', {}).get('type', 'UNKNOWN')
