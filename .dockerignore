@@ -1,0 +1,18 @@
+# Version control
+.git
+.gitignore
+
+# Python caching
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual environments
+venv/
+env/
+.env
+
+# Local application data (prevent overwriting production data if accidentally copied)
+src/saved_locations.json
+saved_locations.json
